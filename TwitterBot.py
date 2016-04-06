@@ -1,19 +1,15 @@
 import twitter
+from keys.py import consumer_key, consumer_secret, access_token_key, access_token_secret
 
 # following installation instructions here
-
-consumer_key="ebdjCz61Q7GYlVrr5XB9ogpbT"
-consumer_secret="i6nQpX3RMQ9FWNFCp2UxOSVLyyTwnY4tjTvjjAtEftORGpCFTr"
-access_token_key="717381819583180800-uGRzcyfbFcTHPG6PMtA8LrarPGWkdjb"
-access_token_secret="qbtkTJAPfdbNdSlws1FLXE2DkCgwg0GaTHUB0c1K32UgQ"
 
 class twitterBot():
 
     def __init__(self):
-        self.consumer_key = "ebdjCz61Q7GYlVrr5XB9ogpbT"
-        self.consumer_secret = "i6nQpX3RMQ9FWNFCp2UxOSVLyyTwnY4tjTvjjAtEftORGpCFTr"
-        self.access_token_key = "717381819583180800-uGRzcyfbFcTHPG6PMtA8LrarPGWkdjb"
-        self.access_token_secret = "qbtkTJAPfdbNdSlws1FLXE2DkCgwg0GaTHUB0c1K32UgQ"
+        #self.consumer_key =  
+        #self.consumer_secret = 
+        #self.access_token_key = 
+       # self.access_token_secret = 
         self.user_name = "ultron9000"
 
     def get_api(self):
@@ -24,11 +20,7 @@ class twitterBot():
 
 
 # test of verifying credentials. it works.
-api = twitter.Api(consumer_key="ebdjCz61Q7GYlVrr5XB9ogpbT",
-                  consumer_secret="i6nQpX3RMQ9FWNFCp2UxOSVLyyTwnY4tjTvjjAtEftORGpCFTr",
-                  access_token_key="717381819583180800-uGRzcyfbFcTHPG6PMtA8LrarPGWkdjb",
-                  access_token_secret="qbtkTJAPfdbNdSlws1FLXE2DkCgwg0GaTHUB0c1K32UgQ")
-
+api = twitter.Api()
 
 
 #results = api.GetSearch(geocode=[37.781157, -122.398720, "1mi"]
