@@ -30,3 +30,34 @@
 #raw_query="q=twitter%20&result_type=recent&since=2014-07-19&count=100"
 #results = api.GetSearch(raw_query="q=twitter%20&result_type=recent&since=2014-07-19&count=100")
 #print([s.text for s in results])
+
+
+# python-twitter module tests
+# import twitter
+
+# # following installation instructions here
+#
+# class twitterBot():
+#
+#     def __init__(self):
+#         #self.consumer_key =
+#         #self.consumer_secret =
+#         #self.access_token_key =
+#         #self.access_token_secret =
+#         self.user_name = "ultron9000"
+#
+#     def get_api(self):
+#         return twitter.Api(consumer_key=self.consumer_key,
+#                            consumer_secret=self.consumer_secret,
+#                            access_token_key=self.access_token_key,
+#                            access_token_secret=self.access_token_secret)
+#
+#
+# # test of verifying credentials. it works.
+# api = twitter.Api()
+#
+#
+# #results = api.GetSearch(geocode=[37.781157, -122.398720, "1mi"]
+#
+# #results = api.GetSearch(term="retweet follow like chance win", count=1)
+# #print([s.text + "\n\n" for s in results])
