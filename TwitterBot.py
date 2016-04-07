@@ -14,6 +14,7 @@
 #    maybe we save the message text somewhere and check if we've already retweeted a similar thing?
 # 10. only retweet tweets from the current time period on. the stream occasionally returns stuff
 #     from a couple weeks ago for some reason.
+# just hit the follow limit...gotta make sure we're following and unfollowing the right people.
 
 import tweepy
 import json # not sure if necessary
