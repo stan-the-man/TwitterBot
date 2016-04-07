@@ -10,7 +10,10 @@
 # 6. handle cases where tweets tell us to follow someone else in order to be entered.
 # 7. we really need to come up with a system to stream tweets now and parse later.
 # 8. make our page look less bot-like.
-# 9. STOP RETWEETING TWEETS THAT ARE JUST OTHER PEOPLE RETWEETING TRYING TO WIN SOMETHING
+# 9. STOP RETWEETING TWEETS THAT ARE JUST OTHER PEOPLE RETWEETING TRYING TO WIN SOMETHING.
+#    maybe we save the message text somewhere and check if we've already retweeted a similar thing?
+# 10. only retweet tweets from the current time period on. the stream occasionally returns stuff
+#     from a couple weeks ago for some reason.
 
 import tweepy
 import json # not sure if necessary
@@ -76,6 +79,7 @@ class MyStreamListener(tweepy.StreamListener):
         # rudimentary error handling. following isn't working like at all, which sucks because
         # it's a common request. what gives?
         # separated into separate blocks to see if that helps with the following problem.
+        # getting a huge amount of tweets in the stream that we've already retweeted/followed/liked.
         try:
             api.retweet(status.id)
         except tweepy.TweepError as e:
