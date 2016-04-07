@@ -10,6 +10,7 @@
 # 6. handle cases where tweets tell us to follow someone else in order to be entered.
 # 7. we really need to come up with a system to stream tweets now and parse later.
 # 8. make our page look less bot-like.
+# 9. STOP RETWEETING TWEETS THAT ARE JUST OTHER PEOPLE RETWEETING TRYING TO WIN SOMETHING
 
 import tweepy
 import json # not sure if necessary
@@ -74,14 +75,28 @@ class MyStreamListener(tweepy.StreamListener):
 
         # rudimentary error handling. following isn't working like at all, which sucks because
         # it's a common request. what gives?
+        # separated into separate blocks to see if that helps with the following problem.
         try:
+            api.retweet(status.id)
+        except tweepy.TweepError as e:
+            print e.message
+        try:
+            api.create_favorite(status.id)
+        except tweepy.TweepError as e:
+            print e.message
+        try:
+            api.create_friendship(status.author.screen_name)
+            print "followed successfully"
+        except tweepy.TweepError as e:
+            print e.message
+        """try:
             api.retweet(status.id) # retweet the status first
             api.create_favorite(status.id) # then favorite the status
             api.create_friendship(status.author.screen_name) # then follow the user
             print status.author.screen_name
-            print "tweet dealt with successfully"
-        except tweepy.TweepError as e: # ???
-            print e.message
+            print "tweet dealt with successfully" # this rarely triggers because following is messed up.
+        except tweepy.TweepError as e: # catch those errors
+            print e.message"""
 
 
     # ideally we'd get some sort of twilio notification or something when we've hit our rate limits.

@@ -1,4 +1,4 @@
-# for experimenting with search terms.
+# for experimenting with search terms. this is probably unnecessary to have online.
 
 
 # test of searching twitter. doesn't work yet
