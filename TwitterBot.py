@@ -5,17 +5,19 @@
 # 2. track DM's (most contests contact winners through DM)
 # 3. figure out a way to leave this up and running forever (deal with rate limits?)
 # 4. decide if we want to filter by location, language, etc.
+# 5. waaaaaay down the road: we should unfollow/delete tweets/etc. like 2 weeks after we originally tweet.
+#    most contests don't actually last that long.
+# 6. handle cases where tweets tell us to follow someone else in order to be entered.
+# 7. we really need to come up with a system to stream tweets now and parse later.
+# 8. make our page look less bot-like.
 
 import tweepy
-import json # not sure if necessary2
+import json # not sure if necessary
 from keys import consumer_key, consumer_secret, access_token_key, access_token_secret
 
 auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token_key, access_token_secret)
 api = tweepy.API(auth)
-
-#results = api.search('retweet follow like chance win')
-#print results[0].author.screen_name
 
 # testing streams
 class MyStreamListener(tweepy.StreamListener):
@@ -70,14 +72,19 @@ class MyStreamListener(tweepy.StreamListener):
           contributors_enabled=False, time_zone=u'Pacific Time (US & Canada)',
           profile_sidebar_border_color=u'A8C7F7', default_profile=False, following=False, listed_count=861)"""
 
-        # maybe need to wrap this in a try/catch block or something. throws exceptions when looking
-        # at tweets we've already seen. can we limit the stream to not show us such tweets?
-        api.retweet(status.id) # retweet the status first
-        api.create_favorite(status.id) # then favorite the status
-        api.create_friendship(status.author.screen_name) # then follow the user
-        print status.author.screen_name
+        # rudimentary error handling. following isn't working like at all, which sucks because
+        # it's a common request. what gives?
+        try:
+            api.retweet(status.id) # retweet the status first
+            api.create_favorite(status.id) # then favorite the status
+            api.create_friendship(status.author.screen_name) # then follow the user
+            print status.author.screen_name
+            print "tweet dealt with successfully"
+        except tweepy.TweepError as e: # ???
+            print e.message
 
 
+    # ideally we'd get some sort of twilio notification or something when we've hit our rate limits.
     def on_error(self, status_code):
         if status_code == 420: # if we overdo our rate limit
             print("Overdid our rate limit!")
@@ -87,10 +94,12 @@ myStreamListener = MyStreamListener()
 myStream = tweepy.Stream(auth = api.auth, listener=myStreamListener)
 
 # so here's the deal. tweepy can't track and filter by location simultaneously.
-# so it seems like we gotta dump this data out to a file and then read it and parse it later
+# so it seems like we might want to dump this data out to a file and then read it and parse it later
 # which isn't quite as clean of a solution but oh well...
-# also note that this track parameter matches any of these terms, not all of them.
-# so maybe we could pad it out with a couple custom phrases.
+# parameters in the same string must have all terms in order to return.
+# different strings work on an either/or basis. if any string matches, the tweet is returned.
+
+# other terms we should look for: giveaway, freebie, free stuff, ????
 myStream.filter(track=['retweet follow chance win', 'retweet like win', 'giveaway like retweet win'], async=True) # anecdotally good search terms
 
 # miscellaneous:
