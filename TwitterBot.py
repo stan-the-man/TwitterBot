@@ -14,6 +14,7 @@
 #    maybe we save the message text somewhere and check if we've already retweeted a similar thing?
 # 10. only retweet tweets from the current time period on. the stream occasionally returns stuff
 #     from a couple weeks ago for some reason.
+# 11. figure out which of our searches yeilds best results.
 # just hit the follow limit...gotta make sure we're following and unfollowing the right people.
 
 import tweepy
@@ -28,8 +29,10 @@ api = tweepy.API(auth)
 # testing streams
 class MyStreamListener(tweepy.StreamListener):
     def on_status(self, status):
-        TweetStorage().add_to_db(status)
+        #TweetStorage().add_to_db(status)
+        import ipdb; ipdb.set_trace()
         print status.text
+        return False
         # rudimentary error handling. following isn't working like at all, which sucks because
         # it's a common request. what gives?
         # separated into separate blocks to see if that helps with the following problem.
@@ -54,19 +57,9 @@ class MyStreamListener(tweepy.StreamListener):
         except tweepy.TweepError as e:
             print e.message
 
-        """try:
-            api.retweet(status.id) # retweet the status first
-            api.create_favorite(status.id) # then favorite the status
-            api.create_friendship(status.author.screen_name) # then follow the user
-            print status.author.screen_name
-            print "tweet dealt with successfully" # this rarely triggers because following is messed up.
-        except tweepy.TweepError as e: # catch those errors
-            print e.message"""
-
-
     # ideally we'd get some sort of twilio notification or something when we've hit our rate limits.
     def on_error(self, status_code):
-        if status_code == 420: # if we overdo our rate limit
+        if status_code == 420:  # if we overdo our rate limit
             print("Overdid our rate limit!")
             return False
 

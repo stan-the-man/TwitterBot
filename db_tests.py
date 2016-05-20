@@ -1,10 +1,9 @@
 from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from tweepy.models import Status
 
 Base = declarative_base()
-engine = create_engine('sqlite:///tweets_test.db', echo=False)
+engine = create_engine('sqlite:///tweets.db', echo=False)
 
 
 class Twitters(Base):
@@ -37,10 +36,5 @@ class TweetStorage():
         tweets = session.query(Twitters).filter_by(id=id).first()
         session.close()
         return tweets
-
-    def first_ten_tweets(self):
-        session = self.Session()
-        tweets = session.query(Twitters)
-        return tweets[0:10]
 
     
