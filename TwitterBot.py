@@ -14,6 +14,7 @@
 # [] deal with this embedded tweet nonsense
 # [] parse @ signs
 # [] sleep when over rate limit
+# [] pass in error rather than code #
 # note: we jump to the OG tweet now and retweet that again.
 
 # required import statements
@@ -42,16 +43,16 @@ class MyStreamListener(tweepy.StreamListener):
             tweet_status = tweet_status.retweeted_status
         return tweet_status
 
-    def check_for_words(self, words, status_text):
+    def check_for_words(self, words, status):
+        status.text = status.text.lower().replace("/", " ").replace(
+                                                  ",", " ").replace("\\", " ")
         for word in words:
-            if word in status_text:
+            if word in status.text:
                 return True
         return False
 
     def retweet(self, status):
         words_to_check = ["retweet", "rt"]
-        status.text = status.text.lower().replace("/", " ").replace(
-                                                  ",", " ").replace("\\", " ")
 
         if self.check_for_words(words_to_check, status.text.lower()):
             try:
@@ -62,8 +63,6 @@ class MyStreamListener(tweepy.StreamListener):
 
     def favorite(self, status):
         words_to_check = ["like", "favorite", "fave"]
-        status.text = status.text.lower().replace("/", " ").replace(
-                                                  ",", " ").replace("\\", " ")
 
         if self.check_for_words(words_to_check, status.text.lower()):
             try:
@@ -74,8 +73,6 @@ class MyStreamListener(tweepy.StreamListener):
 
     def follow(self, status):
         words_to_check = ["follow"]
-        status.text = status.text.lower().replace("/", " ").replace(
-                                                  ",", " ").replace("\\", " ")
 
         if self.check_for_words(words_to_check, status.text.lower()):
             try:
