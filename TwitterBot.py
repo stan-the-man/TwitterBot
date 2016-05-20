@@ -17,7 +17,6 @@
 # [] pass in error rather than code #
 # note: we jump to the OG tweet now and retweet that again.
 
-# required import statements
 import tweepy
 import time
 from keys import consumer_key, consumer_secret, access_token_key, access_token_secret
@@ -83,7 +82,7 @@ class MyStreamListener(tweepy.StreamListener):
                 self.on_error(e.message[0]['code'])
 
     def on_error(self, status_code):
-        if status_code == 420: # if we overdo our rate limit
+        if status_code == 420:  # if we overdo our rate limit
             print("Overdid our rate limit!")
             time.sleep(60*15) # sleep for 15 minutes for new requests
             return False
