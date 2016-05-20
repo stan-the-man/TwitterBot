@@ -1,22 +1,24 @@
 # NOTE: to stop the stream, hit control + shift + \
 
 # TODO:
-# 1. handle exceptions given when parsing a tweet that's already been liked/favorited/followed/etc.
-# 2. track DM's (most contests contact winners through DM)
-# 3. figure out a way to leave this up and running forever (deal with rate limits?)
-# 4. decide if we want to filter by location, language, etc.
-# 5. waaaaaay down the road: we should unfollow/delete tweets/etc. like 2 weeks after we originally tweet.
-#    most contests don't actually last that long.
-# 6. handle cases where tweets tell us to follow someone else in order to be entered.
-# 7. we really need to come up with a system to stream tweets now and parse later.
-# 8. make our page look less bot-like.
-# 9. STOP RETWEETING TWEETS THAT ARE JUST OTHER PEOPLE RETWEETING TRYING TO WIN SOMETHING.
-#    maybe we save the message text somewhere and check if we've already retweeted a similar thing?
-# 10. only retweet tweets from the current time period on. the stream occasionally returns stuff
+# [x] handle exceptions given when parsing a tweet that's already been liked/favorited/followed/etc.
+# [] track DM's (most contests contact winners through DM)
+# [] figure out a way to leave this up and running forever (deal with rate limits?)
+# [] decide if we want to filter by location, language, etc.
+# [] handle cases where tweets tell us to follow someone else in order to be entered.
+# [] we really need to come up with a system to stream tweets now and parse later.
+# [] make our page look less bot-like (not really programming-related).
+# [] only retweet tweets from the current time period on. the stream occasionally returns stuff
 #     from a couple weeks ago for some reason.
-# just hit the follow limit...gotta make sure we're following and unfollowing the right people.
+# [x] don't retweet tweets that are just someone else retweeting the contest.
+# [] deal with this embedded tweet nonsense
+# [] parse @ signs
+# [] sleep when over rate limit
+# note: we jump to the OG tweet now and retweet that again.
 
+# required import statements
 import tweepy
+import time
 from keys import consumer_key, consumer_secret, access_token_key, access_token_secret
 from db_handlers import TweetStorage
 
@@ -24,55 +26,73 @@ auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token_key, access_token_secret)
 api = tweepy.API(auth)
 
-
-# testing streams
+# begin class definition
 class MyStreamListener(tweepy.StreamListener):
     def on_status(self, status):
-        TweetStorage().add_to_db(status)
-        print status.text
-        # rudimentary error handling. following isn't working like at all, which sucks because
-        # it's a common request. what gives?
-        # separated into separate blocks to see if that helps with the following problem.
-        # getting a huge amount of tweets in the stream that we've already retweeted/followed/liked.
+
+        tweet_to_retweet = self.get_og_tweet(status)
+        self.retweet(tweet_to_retweet)
+        self.favorite(tweet_to_retweet)
+        self.follow(tweet_to_retweet)
+
+    # returns a status object (earliest tweet we can find)
+    def get_og_tweet(self, status):
+        tweet_status = status
+        while hasattr(tweet_status, 'retweeted_status'):
+            tweet_status = tweet_status.retweeted_status
+        return tweet_status
+
+    def check_for_words(self, words, status_text):
+        for word in words:
+            if word in status_text:
+                return True
+        return False
 
     def retweet(self, status):
-        try:
-            api.retweet(status.id)
-        except tweepy.TweepError as e:
-            print e.message
+        words_to_check = ["retweet", "rt"]
+        status.text = status.text.lower().replace("/", " ").replace(
+                                                  ",", " ").replace("\\", " ")
+
+        if self.check_for_words(words_to_check, status.text.lower()):
+            try:
+                api.retweet(status.id)
+            except tweepy.TweepError as e:
+                print e.message
+                self.on_error(e.message[0]['code'])
 
     def favorite(self, status):
-        try:
-            api.create_favorite(status.id)
-        except tweepy.TweepError as e:
-            print e.message
+        words_to_check = ["like", "favorite", "fave"]
+        status.text = status.text.lower().replace("/", " ").replace(
+                                                  ",", " ").replace("\\", " ")
+
+        if self.check_for_words(words_to_check, status.text.lower()):
+            try:
+                api.create_favorite(status.id)
+            except tweepy.TweepError as e:
+                print e.message
+                self.on_error(e.message[0]['code'])
 
     def follow(self, status):
-        try:
-            api.create_friendship(status.author.screen_name)
-            print "followed successfully"
-        except tweepy.TweepError as e:
-            print e.message
+        words_to_check = ["follow"]
+        status.text = status.text.lower().replace("/", " ").replace(
+                                                  ",", " ").replace("\\", " ")
 
-        """try:
-            api.retweet(status.id) # retweet the status first
-            api.create_favorite(status.id) # then favorite the status
-            api.create_friendship(status.author.screen_name) # then follow the user
-            print status.author.screen_name
-            print "tweet dealt with successfully" # this rarely triggers because following is messed up.
-        except tweepy.TweepError as e: # catch those errors
-            print e.message"""
+        if self.check_for_words(words_to_check, status.text.lower()):
+            try:
+                api.create_friendship(status.author.screen_name)
+                print "followed successfully"
+            except tweepy.TweepError as e:
+                print e.message
+                self.on_error(e.message[0]['code'])
 
-
-    # ideally we'd get some sort of twilio notification or something when we've hit our rate limits.
     def on_error(self, status_code):
         if status_code == 420: # if we overdo our rate limit
             print("Overdid our rate limit!")
+            time.sleep(60*15) # sleep for 15 minutes for new requests
             return False
 
-
 class TwitterStream():
-
+    # class member to hold things we want to see
     TERMS = [
              'retweet follow chance win',
              'retweet like win',
