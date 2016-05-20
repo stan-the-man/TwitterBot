@@ -53,7 +53,7 @@ class MyStreamListener(tweepy.StreamListener):
     def retweet(self, status):
         words_to_check = ["retweet", "rt"]
 
-        if self.check_for_words(words_to_check, status.text.lower()):
+        if self.check_for_words(words_to_check, status):
             try:
                 api.retweet(status.id)
             except tweepy.TweepError as e:
@@ -63,7 +63,7 @@ class MyStreamListener(tweepy.StreamListener):
     def favorite(self, status):
         words_to_check = ["like", "favorite", "fave"]
 
-        if self.check_for_words(words_to_check, status.text.lower()):
+        if self.check_for_words(words_to_check, status):
             try:
                 api.create_favorite(status.id)
             except tweepy.TweepError as e:
@@ -73,7 +73,7 @@ class MyStreamListener(tweepy.StreamListener):
     def follow(self, status):
         words_to_check = ["follow"]
 
-        if self.check_for_words(words_to_check, status.text.lower()):
+        if self.check_for_words(words_to_check, status):
             try:
                 api.create_friendship(status.author.screen_name)
                 print "followed successfully"
