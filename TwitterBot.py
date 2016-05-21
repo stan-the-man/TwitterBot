@@ -13,16 +13,20 @@
 # [] parse @ signs
 # [x] sleep when over rate limit
 # [] pass in error rather than code
-# [] wrap all our error checks in their own module
+# [x] wrap all our error checks in their own module
+# [] add a log file
 
 import tweepy # for all the twitter junk
 import time # for sleeping
+import pytz # for date-checking
 from datetime import datetime, timedelta # for date-checking
 from keys import consumer_key, consumer_secret, access_token_key, access_token_secret
 from db_handlers import TweetStorage
+from utilities import get_now
 
 # global variable of bot spotters
 spotters = ["BotSpotterBot"]
+MAX_DAYS_BACK = 3
 
 auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token_key, access_token_secret)
@@ -55,54 +59,50 @@ class MyStreamListener(tweepy.StreamListener):
     def check_if_bot_spotter(self, name):
         return (name in spotters)
 
-    # boolean to return true if created in the last week or so.
-    # we'll be passing in a status.createdat datetime object
-    # gotta convert for standardized timezones?
     def check_date(self, date):
-        return True
+       date = pytz.utc.localize(date)
+       return (date < (get_now() - timedelta(days=MAX_DAYS_BACK)))
 
+    def is_invalid(self, words, status):
+       words = self.check_for_words(words, status)
+       spotter = self.check_if_bot_spotter(status.author.screen_name)
+       date = self.check_date(status.created_at)
+
+       if spotter:
+           print "caught a bot!"
+       if date:
+           print "tweet from too long ago", status.created_at
+       return (words or spotter or date)
 
     def retweet(self, status):
-        if self.check_if_bot_spotter(status.author.screen_name):
-            print("Caught a bot! " + status.author.screen_name)
+        words_to_check = ["retweet", "rt"]
+        if self.is_invalid(words_to_check, status):
             return
 
-        words_to_check = ["retweet", "rt"]
-
-        if self.check_for_words(words_to_check, status):
-            try:
-                api.retweet(status.id)
-            except tweepy.TweepError as e:
-                # print e.message
-                self.on_error(e.message[0]['code'])
+        try:
+            api.retweet(status.id)
+        except tweepy.TweepError as e:
+            self.on_error(e.message[0]['code'])
 
     def favorite(self, status):
-        if self.check_if_bot_spotter(status.author.screen_name):
-            print("Caught a bot! " + status.author.screen_name)
+        words_to_check = ["like", "favorite", "fave"]
+        if self.is_invalid(words_to_check, status):
             return
 
-        words_to_check = ["like", "favorite", "fave"]
-
-        if self.check_for_words(words_to_check, status):
-            try:
-                api.create_favorite(status.id)
-            except tweepy.TweepError as e:
-                # print e.message
-                self.on_error(e.message[0]['code'])
+        try:
+            api.create_favorite(status.id)
+        except tweepy.TweepError as e:
+            self.on_error(e.message[0]['code'])
 
     def follow(self, status):
-        if self.check_if_bot_spotter(status.author.screen_name):
-            print("Caught a bot! " + status.author.screen_name)
+        words_to_check = ["follow"]
+        if self.is_invalid(words_to_check, status):
             return
 
-        words_to_check = ["follow"]
-
-        if self.check_for_words(words_to_check, status):
-            try:
-                api.create_friendship(status.author.screen_name)
-            except tweepy.TweepError as e:
-                # print e.message
-                self.on_error(e.message[0]['code'])
+        try:
+            api.create_friendship(status.author.screen_name)
+        except tweepy.TweepError as e:
+            self.on_error(e.message[0]['code'])
 
     def on_error(self, status_code):
         if status_code == 420:
