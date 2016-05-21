@@ -15,7 +15,6 @@
 # [] parse @ signs
 # [] sleep when over rate limit
 # [] pass in error rather than code #
-# note: we jump to the OG tweet now and retweet that again.
 
 import tweepy
 import time
@@ -57,7 +56,7 @@ class MyStreamListener(tweepy.StreamListener):
             try:
                 api.retweet(status.id)
             except tweepy.TweepError as e:
-                print e.message
+                # print e.message
                 self.on_error(e.message[0]['code'])
 
     def favorite(self, status):
@@ -67,7 +66,7 @@ class MyStreamListener(tweepy.StreamListener):
             try:
                 api.create_favorite(status.id)
             except tweepy.TweepError as e:
-                print e.message
+                # print e.message
                 self.on_error(e.message[0]['code'])
 
     def follow(self, status):
@@ -76,16 +75,27 @@ class MyStreamListener(tweepy.StreamListener):
         if self.check_for_words(words_to_check, status):
             try:
                 api.create_friendship(status.author.screen_name)
-                print "followed successfully"
             except tweepy.TweepError as e:
-                print e.message
+                # print e.message
                 self.on_error(e.message[0]['code'])
 
     def on_error(self, status_code):
-        if status_code == 420:  # if we overdo our rate limit
-            print("Overdid our rate limit!")
+        if status_code == 420:
+            print("Overdid our rate limit! Taking a nap now...")
             time.sleep(60*15) # sleep for 15 minutes for new requests
             return False
+        elif status_code == 327: # could we do a switch statement here instead?
+            print("We have already retweeted that tweet.")
+            return False
+        elif status_code == 139:
+            print("We have already favorited that tweet.")
+            return False
+        else:
+            print("Encountered an error I don't know how to handle. Taking a nap...");
+            print status_code
+            time.sleep(60*15)
+            return False
+
 
 class TwitterStream():
     # class member to hold things we want to see
