@@ -5,21 +5,22 @@
 # [] track DM's (most contests contact winners through DM)
 # [] figure out a way to leave this up and running forever (deal with rate limits?)
 # [] decide if we want to filter by location, language, etc.
-# [] handle cases where tweets tell us to follow someone else in order to be entered.
 # [] we really need to come up with a system to stream tweets now and parse later.
-# [] make our page look less bot-like (not really programming-related).
-# [] only retweet tweets from the current time period on. the stream occasionally returns stuff
-#     from a couple weeks ago for some reason.
+# [x] make our page look less bot-like (not really programming-related).
+# [] only retweet tweets from the current time period on. the stream occasionally returns stuff from a while back that we don't want to deal with.
 # [x] don't retweet tweets that are just someone else retweeting the contest.
 # [] deal with this embedded tweet nonsense
 # [] parse @ signs
-# [] sleep when over rate limit
+# [x] sleep when over rate limit
 # [] pass in error rather than code #
 
 import tweepy
 import time
 from keys import consumer_key, consumer_secret, access_token_key, access_token_secret
 from db_handlers import TweetStorage
+
+# global variable of bot spotters
+spotters = ["BotSpotterBot"]
 
 auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token_key, access_token_secret)
@@ -49,7 +50,14 @@ class MyStreamListener(tweepy.StreamListener):
                 return True
         return False
 
+    def check_if_bot_spotter(self, name):
+        return (name in spotters)
+
     def retweet(self, status):
+        if check_if_bot_spotter(status.author.screen_name):
+            print("Caught a bot! " + status.author.screen_name)
+            return
+
         words_to_check = ["retweet", "rt"]
 
         if self.check_for_words(words_to_check, status):
@@ -60,6 +68,10 @@ class MyStreamListener(tweepy.StreamListener):
                 self.on_error(e.message[0]['code'])
 
     def favorite(self, status):
+        if check_if_bot_spotter(status.author.screen_name):
+            print("Caught a bot! " + status.author.screen_name)
+            return
+
         words_to_check = ["like", "favorite", "fave"]
 
         if self.check_for_words(words_to_check, status):
@@ -70,6 +82,10 @@ class MyStreamListener(tweepy.StreamListener):
                 self.on_error(e.message[0]['code'])
 
     def follow(self, status):
+        if check_if_bot_spotter(status.author.screen_name):
+            print("Caught a bot! " + status.author.screen_name)
+            return
+
         words_to_check = ["follow"]
 
         if self.check_for_words(words_to_check, status):
