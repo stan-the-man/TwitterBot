@@ -12,10 +12,12 @@
 # [] deal with this embedded tweet nonsense
 # [] parse @ signs
 # [x] sleep when over rate limit
-# [] pass in error rather than code #
+# [] pass in error rather than code
+# [] wrap all our error checks in their own module
 
-import tweepy
-import time
+import tweepy # for all the twitter junk
+import time # for sleeping
+from datetime import datetime, timedelta # for date-checking
 from keys import consumer_key, consumer_secret, access_token_key, access_token_secret
 from db_handlers import TweetStorage
 
@@ -53,8 +55,15 @@ class MyStreamListener(tweepy.StreamListener):
     def check_if_bot_spotter(self, name):
         return (name in spotters)
 
+    # boolean to return true if created in the last week or so.
+    # we'll be passing in a status.createdat datetime object
+    # gotta convert for standardized timezones?
+    def check_date(self, date):
+        return True
+
+
     def retweet(self, status):
-        if check_if_bot_spotter(status.author.screen_name):
+        if self.check_if_bot_spotter(status.author.screen_name):
             print("Caught a bot! " + status.author.screen_name)
             return
 
@@ -68,7 +77,7 @@ class MyStreamListener(tweepy.StreamListener):
                 self.on_error(e.message[0]['code'])
 
     def favorite(self, status):
-        if check_if_bot_spotter(status.author.screen_name):
+        if self.check_if_bot_spotter(status.author.screen_name):
             print("Caught a bot! " + status.author.screen_name)
             return
 
@@ -82,7 +91,7 @@ class MyStreamListener(tweepy.StreamListener):
                 self.on_error(e.message[0]['code'])
 
     def follow(self, status):
-        if check_if_bot_spotter(status.author.screen_name):
+        if self.check_if_bot_spotter(status.author.screen_name):
             print("Caught a bot! " + status.author.screen_name)
             return
 
