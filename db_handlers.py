@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker
 from tweepy.models import Status
 
 Base = declarative_base()
-engine = create_engine('sqlite:///tweets_test.db', echo=False)
+engine = create_engine('sqlite:///embedded_tweet.db', echo=False)
 
 
 class Twitters(Base):

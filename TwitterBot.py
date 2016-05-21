@@ -12,9 +12,10 @@
 # [] deal with this embedded tweet nonsense
 # [] parse @ signs
 # [x] sleep when over rate limit
-# [] pass in error rather than code
+# [x] pass in error rather than code
 # [x] wrap all our error checks in their own module
 # [] add a log file
+# [] capture an embedded tweet so we can inspect it
 
 import tweepy # for all the twitter junk
 import time # for sleeping
@@ -35,7 +36,6 @@ api = tweepy.API(auth)
 # begin class definition
 class MyStreamListener(tweepy.StreamListener):
     def on_status(self, status):
-
         tweet_to_retweet = self.get_og_tweet(status)
         self.retweet(tweet_to_retweet)
         self.favorite(tweet_to_retweet)
@@ -81,6 +81,7 @@ class MyStreamListener(tweepy.StreamListener):
 
         try:
             api.retweet(status.id)
+            TweetStorage().add_to_db(status)
         except tweepy.TweepError as e:
             self.on_error(e.message[0]['code'])
 
