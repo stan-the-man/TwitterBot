@@ -29,10 +29,10 @@ import pytz # for date-checking
 from datetime import datetime, timedelta # for date-checking
 from keys import consumer_key, consumer_secret, access_token_key, access_token_secret
 from db_handlers import TweetStorage
-from utilities import get_now
+from utilities import get_now, bot_in_name
 
 # global variable of bot spotters
-spotters = ["BotSpotterBot"]
+spotters = ["BotSpotterBot", "RealBotSpotter"]
 MAX_DAYS_BACK = 3
 
 auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
@@ -63,7 +63,7 @@ class MyStreamListener(tweepy.StreamListener):
         return False
 
     def check_if_bot_spotter(self, name):
-        return (name in spotters)
+        return (name in spotters) or bot_in_name(name)
 
     def check_date(self, date):
        date = pytz.utc.localize(date)
