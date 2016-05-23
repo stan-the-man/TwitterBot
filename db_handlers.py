@@ -14,6 +14,7 @@ class Twitters(Base):
     text = Column(String)
     tweet_id = Column(Integer)
     author_screen_name = Column(String)
+    # tweet_dir = Column(String)
 
     def __repr__(self):
         return '<Twitters(text= %s, tweet_id= %i, author_screen_name= %s)>' % (self.text, self.tweet_id, self.author)

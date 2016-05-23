@@ -1,4 +1,4 @@
-# NOTE: to stop the stream, hit control + shift + \
+# NOTE: to stop the stream, hit control + shift + \ or control + z
 
 # TODO:
 # [x] handle exceptions given when parsing a tweet that's already been liked/favorited/followed/etc.
@@ -7,7 +7,7 @@
 # [] decide if we want to filter by location, language, etc.
 # [] we really need to come up with a system to stream tweets now and parse later.
 # [x] make our page look less bot-like (not really programming-related).
-# [] only retweet tweets from the current time period on. the stream occasionally returns stuff from a while back that we don't want to deal with.
+# [x] only retweet tweets from the current time period on. the stream occasionally returns stuff from a while back that we don't want to deal with.
 # [x] don't retweet tweets that are just someone else retweeting the contest.
 # [] deal with this embedded tweet nonsense
 # [] parse @ signs
@@ -16,6 +16,12 @@
 # [x] wrap all our error checks in their own module
 # [] add a log file
 # [] capture an embedded tweet so we can inspect it
+# [] add pytz to requirements.txt
+
+# Note: each "tweet from too long ago" always happens in groups of 3. why?
+# oh, it's because we run is_invalid for each action (like, retweet, follow)
+# can we introduce more randomness into the stream?
+# we're missing a lot and also repeating a lot
 
 import tweepy # for all the twitter junk
 import time # for sleeping
@@ -82,6 +88,12 @@ class MyStreamListener(tweepy.StreamListener):
         try:
             api.retweet(status.id)
             TweetStorage().add_to_db(status)
+            print "Retweeted!"
+            print dir(status)
+            print "Entities:"
+            print dir(status.entities)
+            print "Text: "
+            print status.text
         except tweepy.TweepError as e:
             self.on_error(e.message[0]['code'])
 
@@ -117,7 +129,7 @@ class MyStreamListener(tweepy.StreamListener):
             print("We have already favorited that tweet.")
             return False
         else:
-            print("Encountered an error I don't know how to handle. Taking a nap...");
+            print("Encountered an error I don't know how to handle. Taking a nap...")
             print status_code
             time.sleep(60*15)
             return False
