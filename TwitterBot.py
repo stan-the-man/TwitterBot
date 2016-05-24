@@ -16,12 +16,16 @@
 # [x] wrap all our error checks in their own module
 # [] add a log file
 # [] capture an embedded tweet so we can inspect it
+<<<<<<< HEAD
 # [] add pytz to requirements.txt
 
 # Note: each "tweet from too long ago" always happens in groups of 3. why?
 # oh, it's because we run is_invalid for each action (like, retweet, follow)
 # can we introduce more randomness into the stream?
 # we're missing a lot and also repeating a lot
+=======
+# [] make our bot look less bot-like by injecting phrases and tweets
+>>>>>>> b9b6aa71baec746c07e49523c7e058a0bc9c29a2
 
 import tweepy # for all the twitter junk
 import time # for sleeping
@@ -122,7 +126,7 @@ class MyStreamListener(tweepy.StreamListener):
             print("Overdid our rate limit! Taking a nap now...")
             time.sleep(60*15) # sleep for 15 minutes for new requests
             return False
-        elif status_code == 327: # could we do a switch statement here instead?
+        elif status_code == 327:
             print("We have already retweeted that tweet.")
             return False
         elif status_code == 139:

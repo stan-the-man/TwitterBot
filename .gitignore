@@ -4,3 +4,4 @@ Searches.py
 .DS_Store
 ExampleDump.json
 *.pyc
+.#TwitterBot.py
