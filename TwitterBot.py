@@ -7,7 +7,7 @@
 # [] decide if we want to filter by location, language, etc.
 # [] we really need to come up with a system to stream tweets now and parse later.
 # [x] make our page look less bot-like (not really programming-related).
-# [] only retweet tweets from the current time period on. the stream occasionally returns stuff from a while back that we don't want to deal with.
+# [x] only retweet tweets from the current time period on. the stream occasionally returns stuff from a while back that we don't want to deal with.
 # [x] don't retweet tweets that are just someone else retweeting the contest.
 # [] deal with this embedded tweet nonsense
 # [] parse @ signs
@@ -16,6 +16,7 @@
 # [x] wrap all our error checks in their own module
 # [] add a log file
 # [] capture an embedded tweet so we can inspect it
+# [] make our bot look less bot-like by injecting phrases and tweets
 
 import tweepy # for all the twitter junk
 import time # for sleeping
@@ -110,7 +111,7 @@ class MyStreamListener(tweepy.StreamListener):
             print("Overdid our rate limit! Taking a nap now...")
             time.sleep(60*15) # sleep for 15 minutes for new requests
             return False
-        elif status_code == 327: # could we do a switch statement here instead?
+        elif status_code == 327:
             print("We have already retweeted that tweet.")
             return False
         elif status_code == 139:
