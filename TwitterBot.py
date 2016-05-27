@@ -16,16 +16,13 @@
 # [x] wrap all our error checks in their own module
 # [] add a log file
 # [] capture an embedded tweet so we can inspect it
-<<<<<<< HEAD
 # [] add pytz to requirements.txt
 
 # Note: each "tweet from too long ago" always happens in groups of 3. why?
 # oh, it's because we run is_invalid for each action (like, retweet, follow)
 # can we introduce more randomness into the stream?
 # we're missing a lot and also repeating a lot
-=======
 # [] make our bot look less bot-like by injecting phrases and tweets
->>>>>>> b9b6aa71baec746c07e49523c7e058a0bc9c29a2
 
 import tweepy # for all the twitter junk
 import time # for sleeping
@@ -33,7 +30,7 @@ import pytz # for date-checking
 from datetime import datetime, timedelta # for date-checking
 from keys import consumer_key, consumer_secret, access_token_key, access_token_secret
 from db_handlers import TweetStorage
-from utilities import get_now, bot_in_name
+from utilities import get_now, bot_in_name, parse_embedded_tweet
 
 # global variable of bot spotters
 spotters = ["BotSpotterBot", "RealBotSpotter"]
@@ -47,16 +44,17 @@ api = tweepy.API(auth)
 class MyStreamListener(tweepy.StreamListener):
     def on_status(self, status):
         tweet_to_retweet = self.get_og_tweet(status)
-        self.retweet(tweet_to_retweet)
-        self.favorite(tweet_to_retweet)
-        self.follow(tweet_to_retweet)
+        if not self.is_invalid(tweet_to_retweet):
+            self.retweet(tweet_to_retweet)
+            self.favorite(tweet_to_retweet)
+            self.follow(tweet_to_retweet)
 
     # returns a status object (earliest tweet we can find)
     def get_og_tweet(self, status):
         tweet_status = status
         while hasattr(tweet_status, 'retweeted_status'):
             tweet_status = tweet_status.retweeted_status
-        return tweet_status
+        return self.get_embedded(tweet_status)
 
     def check_for_words(self, words, status):
         status.text = status.text.lower().replace("/", " ").replace(
@@ -73,37 +71,37 @@ class MyStreamListener(tweepy.StreamListener):
        date = pytz.utc.localize(date)
        return (date < (get_now() - timedelta(days=MAX_DAYS_BACK)))
 
-    def is_invalid(self, words, status):
-       words = self.check_for_words(words, status)
+    def get_embedded(self, status):
+        base_tweet_id = parse_embedded_tweet(status.text)
+        if base_tweet_id is None:
+            return status
+        return api.get_status(base_tweet_id)
+
+    def is_invalid(self, status):
        spotter = self.check_if_bot_spotter(status.author.screen_name)
        date = self.check_date(status.created_at)
 
        if spotter:
            print "caught a bot!"
+           return True
        if date:
            print "tweet from too long ago", status.created_at
-       return (words or spotter or date)
+           return True
+       return False
 
     def retweet(self, status):
         words_to_check = ["retweet", "rt"]
-        if self.is_invalid(words_to_check, status):
+        if self.check_for_words(words_to_check, status):
             return
 
         try:
             api.retweet(status.id)
-            TweetStorage().add_to_db(status)
-            print "Retweeted!"
-            print dir(status)
-            print "Entities:"
-            print dir(status.entities)
-            print "Text: "
-            print status.text
         except tweepy.TweepError as e:
             self.on_error(e.message[0]['code'])
 
     def favorite(self, status):
         words_to_check = ["like", "favorite", "fave"]
-        if self.is_invalid(words_to_check, status):
+        if self.check_for_words(words_to_check, status):
             return
 
         try:
@@ -113,7 +111,7 @@ class MyStreamListener(tweepy.StreamListener):
 
     def follow(self, status):
         words_to_check = ["follow"]
-        if self.is_invalid(words_to_check, status):
+        if self.check_for_words(words_to_check, status):
             return
 
         try:
@@ -161,8 +159,13 @@ class TwitterStream():
 # different strings work on an either/or basis. if any string matches, the tweet is returned.
 
 # other terms we should look for: giveaway, freebie, free stuff, ????
-stream = TwitterStream()
-stream.filter_with(stream.TERMS)
+while True:
+    try:
+        stream = TwitterStream()
+        stream.filter_with(stream.TERMS)
+    except HTTPError as e:
+        print "Encountered an HTTPError. Sleeping now."
+        time.sleep(60 * 15)
 
 
 # miscellaneous:
