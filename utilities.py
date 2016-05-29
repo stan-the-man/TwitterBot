@@ -9,8 +9,11 @@ class HeadRequest(urllib2.Request):
 
 # this code is copied from http://stackoverflow.com/questions/6500721/find-where-a-t-co-link-goes-to
 def get_real(url):
-    res = urllib2.urlopen(HeadRequest(url))
-    return res.geturl()
+    try:
+        res = urllib2.urlopen(HeadRequest(url))
+        return res.geturl()
+    except ConnectionError as e:
+        print e
 
 def get_now():
     return pytz.utc.localize(datetime.now())

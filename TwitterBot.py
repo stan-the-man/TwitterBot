@@ -9,13 +9,13 @@
 # [x] make our page look less bot-like (not really programming-related).
 # [x] only retweet tweets from the current time period on. the stream occasionally returns stuff from a while back that we don't want to deal with.
 # [x] don't retweet tweets that are just someone else retweeting the contest.
-# [] deal with this embedded tweet nonsense
+# [x] deal with this embedded tweet nonsense
 # [] parse @ signs
 # [x] sleep when over rate limit
 # [x] pass in error rather than code
 # [x] wrap all our error checks in their own module
 # [] add a log file
-# [] capture an embedded tweet so we can inspect it
+# [x] capture an embedded tweet so we can inspect it
 # [] add pytz to requirements.txt
 
 # Note: each "tweet from too long ago" always happens in groups of 3. why?
@@ -27,6 +27,7 @@
 import tweepy # for all the twitter junk
 import time # for sleeping
 import pytz # for date-checking
+from urllib2 import HTTPError
 from datetime import datetime, timedelta # for date-checking
 from keys import consumer_key, consumer_secret, access_token_key, access_token_secret
 from db_handlers import TweetStorage
@@ -52,9 +53,14 @@ class MyStreamListener(tweepy.StreamListener):
     # returns a status object (earliest tweet we can find)
     def get_og_tweet(self, status):
         tweet_status = status
-        while hasattr(tweet_status, 'retweeted_status'):
-            tweet_status = tweet_status.retweeted_status
-        return self.get_embedded(tweet_status)
+        try:
+            while hasattr(tweet_status, 'retweeted_status'):
+                tweet_status = tweet_status.retweeted_status
+            return self.get_embedded(tweet_status)
+        except tweepy.RateLimitError as e:
+            print "Hit rate limit error from get_og_tweet."
+            print e
+
 
     def check_for_words(self, words, status):
         status.text = status.text.lower().replace("/", " ").replace(
@@ -73,9 +79,13 @@ class MyStreamListener(tweepy.StreamListener):
 
     def get_embedded(self, status):
         base_tweet_id = parse_embedded_tweet(status.text)
-        if base_tweet_id is None:
-            return status
-        return api.get_status(base_tweet_id)
+        try:
+            if base_tweet_id is None:
+                return status
+            return api.get_status(base_tweet_id)
+        except tweepy.RateLimitError as e:
+            print "Hit rate limit error from get_embedded."
+            print e
 
     def is_invalid(self, status):
        spotter = self.check_if_bot_spotter(status.author.screen_name)
@@ -96,8 +106,12 @@ class MyStreamListener(tweepy.StreamListener):
 
         try:
             api.retweet(status.id)
+            time.sleep(11)
         except tweepy.TweepError as e:
             self.on_error(e.message[0]['code'])
+        except tweepy.RateLimitError as e:
+            print "Hit rate limit error from retweet."
+            print e
 
     def favorite(self, status):
         words_to_check = ["like", "favorite", "fave"]
@@ -106,8 +120,12 @@ class MyStreamListener(tweepy.StreamListener):
 
         try:
             api.create_favorite(status.id)
+            time.sleep(11)
         except tweepy.TweepError as e:
             self.on_error(e.message[0]['code'])
+        except tweepy.RateLimitError as e:
+            print "Hit rate limit error from favorite."
+            print e
 
     def follow(self, status):
         words_to_check = ["follow"]
@@ -116,8 +134,11 @@ class MyStreamListener(tweepy.StreamListener):
 
         try:
             api.create_friendship(status.author.screen_name)
+            time.sleep(11)
         except tweepy.TweepError as e:
             self.on_error(e.message[0]['code'])
+            print "Hit rate limit error from follow."
+            print e
 
     def on_error(self, status_code):
         if status_code == 420:
@@ -140,9 +161,14 @@ class MyStreamListener(tweepy.StreamListener):
 class TwitterStream():
     # class member to hold things we want to see
     TERMS = [
+             'retweet win',
+             'retweet chance win',
+             'follow chance win',
+             'follow like chance win',
              'retweet follow chance win',
              'retweet like win',
              'giveaway like retweet win',
+             'give away like win retweet'
             ]
 
     def __init__(self):
@@ -159,13 +185,11 @@ class TwitterStream():
 # different strings work on an either/or basis. if any string matches, the tweet is returned.
 
 # other terms we should look for: giveaway, freebie, free stuff, ????
-while True:
-    try:
-        stream = TwitterStream()
-        stream.filter_with(stream.TERMS)
-    except HTTPError as e:
-        print "Encountered an HTTPError. Sleeping now."
-        time.sleep(60 * 15)
+try:
+    stream = TwitterStream()
+    stream.filter_with(stream.TERMS)
+except HTTPError as e:
+    print "Encountered an HTTPError. Sleeping now."
 
 
 # miscellaneous:
