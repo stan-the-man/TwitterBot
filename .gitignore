@@ -5,3 +5,4 @@ Searches.py
 ExampleDump.json
 *.pyc
 .#TwitterBot.py
+*.log
