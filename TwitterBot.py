@@ -115,7 +115,7 @@ class MyStreamListener(tweepy.StreamListener):
             error_log.error('Hit rate limit error from retweet')
 
     def favorite(self, status):
-        words_to_check = ["like", "favorite", "fave"]
+        words_to_check = ["like", "favorite", "fave", "fav"]
         if not self.check_for_words(words_to_check, status):
             return
 
