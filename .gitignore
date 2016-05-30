@@ -6,3 +6,4 @@ ExampleDump.json
 *.pyc
 .#TwitterBot.py
 *.log
+*.swp
