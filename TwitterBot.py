@@ -14,24 +14,24 @@
 # [x] sleep when over rate limit
 # [x] pass in error rather than code
 # [x] wrap all our error checks in their own module
-# [] add a log file
+# [x] add a log file
 # [x] capture an embedded tweet so we can inspect it
-# [] add pytz to requirements.txt
-
-# Note: each "tweet from too long ago" always happens in groups of 3. why?
-# oh, it's because we run is_invalid for each action (like, retweet, follow)
+# [x] add pytz to requirements.txt
+# [] purge followers, retweets, and likes periodically, how long do we want to wait to purge?
 # can we introduce more randomness into the stream?
-# we're missing a lot and also repeating a lot
 # [] make our bot look less bot-like by injecting phrases and tweets
+# use a random imgur link and a dict of various "haha so funny" phrases
 
 import tweepy # for all the twitter junk
 import time # for sleeping
 import pytz # for date-checking
 from urllib2 import HTTPError
-from datetime import datetime, timedelta # for date-checking
-from keys import consumer_key, consumer_secret, access_token_key, access_token_secret
+from datetime import timedelta # for date-checking
+from keys import (consumer_key, consumer_secret,
+                  access_token_key, access_token_secret, SELF_SCREEN_NAME)
 from db_handlers import TweetStorage
-from utilities import get_now, bot_in_name, parse_embedded_tweet
+from utilities import (get_now, bot_in_name,
+                       parse_embedded_tweet, create_logger)
 
 # global variable of bot spotters
 spotters = ["BotSpotterBot", "RealBotSpotter"]
@@ -40,15 +40,20 @@ MAX_DAYS_BACK = 3
 auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token_key, access_token_secret)
 api = tweepy.API(auth)
+tweet_log = create_logger('Tweets')
+error_log = create_logger('Errors')
 
 # begin class definition
 class MyStreamListener(tweepy.StreamListener):
     def on_status(self, status):
-        tweet_to_retweet = self.get_og_tweet(status)
-        if not self.is_invalid(tweet_to_retweet):
-            self.retweet(tweet_to_retweet)
-            self.favorite(tweet_to_retweet)
-            self.follow(tweet_to_retweet)
+        try:
+            tweet_to_retweet = self.get_og_tweet(status)
+            if not self.is_invalid(tweet_to_retweet):
+                self.retweet(tweet_to_retweet)
+                self.favorite(tweet_to_retweet)
+                self.follow(tweet_to_retweet)
+        except HTTPError as e:
+            print e
 
     # returns a status object (earliest tweet we can find)
     def get_og_tweet(self, status):
@@ -58,9 +63,7 @@ class MyStreamListener(tweepy.StreamListener):
                 tweet_status = tweet_status.retweeted_status
             return self.get_embedded(tweet_status)
         except tweepy.RateLimitError as e:
-            print "Hit rate limit error from get_og_tweet."
-            print e
-
+            error_log.error('Hit rate limit error from get_og_tweet')
 
     def check_for_words(self, words, status):
         status.text = status.text.lower().replace("/", " ").replace(
@@ -84,64 +87,67 @@ class MyStreamListener(tweepy.StreamListener):
                 return status
             return api.get_status(base_tweet_id)
         except tweepy.RateLimitError as e:
-            print "Hit rate limit error from get_embedded."
-            print e
+            error_log.error('Hit rate limit error from get_embedded')
 
     def is_invalid(self, status):
-       spotter = self.check_if_bot_spotter(status.author.screen_name)
-       date = self.check_date(status.created_at)
+        spotter = self.check_if_bot_spotter(status.author.screen_name)
+        date = self.check_date(status.created_at)
 
-       if spotter:
-           print "caught a bot!"
-           return True
-       if date:
-           print "tweet from too long ago", status.created_at
-           return True
-       return False
+        if spotter:
+            error_log.error('Caught a Bot {}'.format(status.author.screen_name))
+            return True
+        if date:
+            error_log.error('tweet from too long ago. {}'.format(status.created_at))
+            return True
+        return False
 
     def retweet(self, status):
         words_to_check = ["retweet", "rt"]
-        if self.check_for_words(words_to_check, status):
+        if not self.check_for_words(words_to_check, status):
             return
 
         try:
             api.retweet(status.id)
+            tweet_log.info('retweeted {}'.format(status.id))
             time.sleep(11)
         except tweepy.TweepError as e:
             self.on_error(e.message[0]['code'])
         except tweepy.RateLimitError as e:
-            print "Hit rate limit error from retweet."
-            print e
+            error_log.error('Hit rate limit error from retweet')
 
     def favorite(self, status):
-        words_to_check = ["like", "favorite", "fave"]
-        if self.check_for_words(words_to_check, status):
+        words_to_check = ["like", "favorite", "fave", "fav"]
+        if not self.check_for_words(words_to_check, status):
             return
 
         try:
             api.create_favorite(status.id)
+            tweet_log.info('favorited {}'.format(status.id))
             time.sleep(11)
         except tweepy.TweepError as e:
             self.on_error(e.message[0]['code'])
         except tweepy.RateLimitError as e:
-            print "Hit rate limit error from favorite."
-            print e
+            error_log.error('Hit rate limit error from favorite')
 
     def follow(self, status):
         words_to_check = ["follow"]
-        if self.check_for_words(words_to_check, status):
+        if not self.check_for_words(words_to_check, status):
             return
 
         try:
-            api.create_friendship(status.author.screen_name)
+            if not api.lookup_friendships([SELF_SCREEN_NAME], [status.author.screen_name])[0].is_following:
+                api.create_friendship(status.author.screen_name)
+                tweet_log.info('followed {}'.format(status.id))
+                time.sleep(11)
             time.sleep(11)
         except tweepy.TweepError as e:
             self.on_error(e.message[0]['code'])
-            print "Hit rate limit error from follow."
-            print e
+        except tweepy.RateLimitError as e:
+            error_log.error('Hit rate limit error from follow')
 
     def on_error(self, status_code):
-        if status_code == 420:
+        error_log.error('Status code: {}'.format(status_code))
+        if status_code == 420 or status_code == 88:
             print("Overdid our rate limit! Taking a nap now...")
             time.sleep(60*15) # sleep for 15 minutes for new requests
             return False
@@ -150,6 +156,9 @@ class MyStreamListener(tweepy.StreamListener):
             return False
         elif status_code == 139:
             print("We have already favorited that tweet.")
+            return False
+        elif status_code == 144:
+            print("Tweet was deleted.")
             return False
         else:
             print("Encountered an error I don't know how to handle. Taking a nap...")

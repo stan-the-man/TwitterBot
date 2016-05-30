@@ -1,4 +1,5 @@
 import pytz
+import logging
 import re
 from datetime import datetime
 import urllib2
@@ -12,8 +13,9 @@ def get_real(url):
     try:
         res = urllib2.urlopen(HeadRequest(url))
         return res.geturl()
-    except ConnectionError as e:
-        print e
+    except:
+        print "Error with get_real."
+        return None
 
 def get_now():
     return pytz.utc.localize(datetime.now())
@@ -41,3 +43,16 @@ def parse_embedded_tweet(text):
     if id is None:
         return
     return id.group(1)
+
+def create_logger(name):
+    '''logging information. Taken from http://victorlin.me/posts/2012/08/26/good-logging-practice-in-python'''
+    log = logging.getLogger(name)
+    log.setLevel(logging.INFO)
+    handler = logging.FileHandler(name + '.log')
+    handler.setLevel(logging.INFO)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
+    log.addHandler(handler)
+    return log
+
+
