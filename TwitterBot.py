@@ -3,7 +3,7 @@
 # TODO:
 # [x] handle exceptions given when parsing a tweet that's already been liked/favorited/followed/etc.
 # [] track DM's (most contests contact winners through DM)
-# [] figure out a way to leave this up and running forever (deal with rate limits?)
+# [x] figure out a way to leave this up and running forever (deal with rate limits?)
 # [] decide if we want to filter by location, language, etc.
 # [] we really need to come up with a system to stream tweets now and parse later.
 # [x] make our page look less bot-like (not really programming-related).
