@@ -34,7 +34,7 @@ from utilities import (get_now, bot_in_name,
                        parse_embedded_tweet, create_logger)
 
 # global variable of bot spotters
-spotters = ["BotSpotterBot", "RealBotSpotter"]
+spotters = ["BotSpotterBot", "RealBotSpotter", "bufbvr"]
 MAX_DAYS_BACK = 3
 
 auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
