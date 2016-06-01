@@ -3,6 +3,7 @@
 # TODO:
 # [x] handle exceptions given when parsing a tweet that's already been liked/favorited/followed/etc.
 # [] track DM's (most contests contact winners through DM)
+# [x] figure out a way to leave this up and running forever (deal with rate limits?)
 # [] decide if we want to filter by location, language, etc.
 # [] we really need to come up with a system to stream tweets now and parse later.
 # [x] make our page look less bot-like (not really programming-related).
@@ -33,7 +34,7 @@ from utilities import (get_now, bot_in_name,
                        parse_embedded_tweet, create_logger)
 
 # global variable of bot spotters
-spotters = ["BotSpotterBot", "RealBotSpotter"]
+spotters = ["BotSpotterBot", "RealBotSpotter", "bufbvr"]
 MAX_DAYS_BACK = 3
 
 auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
@@ -182,7 +183,7 @@ class TwitterStream():
     def __init__(self):
         myStreamListener = MyStreamListener()
         self.myStream = tweepy.Stream(auth=api.auth, listener=myStreamListener)
-    
+
     def filter_with(self, terms):
         self.myStream.filter(track=terms, async=True)
 
