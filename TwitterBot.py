@@ -5,7 +5,7 @@
 # [] track DM's (most contests contact winners through DM)
 # [x] figure out a way to leave this up and running forever (deal with rate limits?)
 # [] decide if we want to filter by location, language, etc.
-# [] we really need to come up with a system to stream tweets now and parse later.
+# [] we should come up with a system to stream tweets now and parse later.
 # [x] make our page look less bot-like (not really programming-related).
 # [x] only retweet tweets from the current time period on. the stream occasionally returns stuff from a while back that we don't want to deal with.
 # [x] don't retweet tweets that are just someone else retweeting the contest.
@@ -21,6 +21,7 @@
 # can we introduce more randomness into the stream?
 # [] make our bot look less bot-like by injecting phrases and tweets
 # use a random imgur link and a dict of various "haha so funny" phrases
+# [] log when the stream drops due to Tweepy
 
 import tweepy # for all the twitter junk
 import time # for sleeping
