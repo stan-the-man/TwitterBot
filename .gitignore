@@ -7,3 +7,4 @@ ExampleDump.json
 .#TwitterBot.py
 *.log
 *.swp
+*.pem
