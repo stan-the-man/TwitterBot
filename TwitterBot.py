@@ -22,6 +22,7 @@
 # [] make our bot look less bot-like by injecting phrases and tweets
 # use a random imgur link and a dict of various "haha so funny" phrases
 # [] log when the stream drops due to Tweepy
+# [] remove commas, ampersands, etc. from keywords follow, like, RT
 
 import tweepy # for all the twitter junk
 import time # for sleeping
