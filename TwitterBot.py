@@ -153,7 +153,7 @@ class MyStreamListener(tweepy.StreamListener):
         error_log.error('Status code: {}'.format(status_code))
         if status_code == 420 or status_code == 88:
             print("Overdid our rate limit! Taking a nap now...")
-            time.sleep(60*MINUTES_TO_WAIT) # sleep for 5 minutes for new requests
+            time.sleep(60*MINUTES_TO_WAIT) # sleep for 15 minutes for new requests
             return False
         elif status_code == 327:
             print("We have already retweeted that tweet.")
