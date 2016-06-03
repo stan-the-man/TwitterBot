@@ -5,7 +5,7 @@
 # [] track DM's (most contests contact winners through DM)
 # [x] figure out a way to leave this up and running forever (deal with rate limits?)
 # [] decide if we want to filter by location, language, etc.
-# [] we really need to come up with a system to stream tweets now and parse later.
+# [] we should come up with a system to stream tweets now and parse later.
 # [x] make our page look less bot-like (not really programming-related).
 # [x] only retweet tweets from the current time period on. the stream occasionally returns stuff from a while back that we don't want to deal with.
 # [x] don't retweet tweets that are just someone else retweeting the contest.
@@ -21,6 +21,8 @@
 # can we introduce more randomness into the stream?
 # [] make our bot look less bot-like by injecting phrases and tweets
 # use a random imgur link and a dict of various "haha so funny" phrases
+# [] log when the stream drops due to Tweepy
+# [] remove commas, ampersands, etc. from keywords follow, like, RT
 
 import tweepy # for all the twitter junk
 import time # for sleeping
@@ -34,8 +36,10 @@ from utilities import (get_now, bot_in_name,
                        parse_embedded_tweet, create_logger)
 
 # global variable of bot spotters
-spotters = ["BotSpotterBot", "RealBotSpotter"]
+spotters = ["BotSpotterBot", "RealBotSpotter", "bufbvr"]
 MAX_DAYS_BACK = 3
+SECONDS_TO_WAIT = 11
+MINUTES_TO_WAIT = 15
 
 auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token_key, access_token_secret)
@@ -109,7 +113,7 @@ class MyStreamListener(tweepy.StreamListener):
         try:
             api.retweet(status.id)
             tweet_log.info('retweeted {}'.format(status.id))
-            time.sleep(11)
+            time.sleep(SECONDS_TO_WAIT)
         except tweepy.TweepError as e:
             self.on_error(e.message[0]['code'])
         except tweepy.RateLimitError as e:
@@ -123,7 +127,7 @@ class MyStreamListener(tweepy.StreamListener):
         try:
             api.create_favorite(status.id)
             tweet_log.info('favorited {}'.format(status.id))
-            time.sleep(11)
+            time.sleep(SECONDS_TO_WAIT)
         except tweepy.TweepError as e:
             self.on_error(e.message[0]['code'])
         except tweepy.RateLimitError as e:
@@ -138,8 +142,8 @@ class MyStreamListener(tweepy.StreamListener):
             if not api.lookup_friendships([SELF_SCREEN_NAME], [status.author.screen_name])[0].is_following:
                 api.create_friendship(status.author.screen_name)
                 tweet_log.info('followed {}'.format(status.id))
-                time.sleep(11)
-            time.sleep(11)
+                time.sleep(SECONDS_TO_WAIT)
+            time.sleep(SECONDS_TO_WAIT)
         except tweepy.TweepError as e:
             self.on_error(e.message[0]['code'])
         except tweepy.RateLimitError as e:
@@ -149,7 +153,7 @@ class MyStreamListener(tweepy.StreamListener):
         error_log.error('Status code: {}'.format(status_code))
         if status_code == 420 or status_code == 88:
             print("Overdid our rate limit! Taking a nap now...")
-            time.sleep(60*15) # sleep for 15 minutes for new requests
+            time.sleep(60*MINUTES_TO_WAIT) # sleep for 15 minutes for new requests
             return False
         elif status_code == 327:
             print("We have already retweeted that tweet.")
@@ -163,7 +167,7 @@ class MyStreamListener(tweepy.StreamListener):
         else:
             print("Encountered an error I don't know how to handle. Taking a nap...")
             print status_code
-            time.sleep(60*15)
+            time.sleep(60*MINUTES_TO_WAIT)
             return False
 
 
@@ -185,7 +189,7 @@ class TwitterStream():
         self.myStream = tweepy.Stream(auth=api.auth, listener=myStreamListener)
 
     def filter_with(self, terms):
-        self.myStream.filter(track=terms, async=True)
+        self.myStream.filter(track=terms, stall_warnings=True)
 
 # so here's the deal. tweepy can't track and filter by location simultaneously.
 # so it seems like we might want to dump this data out to a file and then read it and parse it later
@@ -194,11 +198,13 @@ class TwitterStream():
 # different strings work on an either/or basis. if any string matches, the tweet is returned.
 
 # other terms we should look for: giveaway, freebie, free stuff, ????
-try:
-    stream = TwitterStream()
-    stream.filter_with(stream.TERMS)
-except HTTPError as e:
-    print "Encountered an HTTPError. Sleeping now."
+while True:
+    try:
+        stream = TwitterStream()
+        stream.filter_with(stream.TERMS)
+    except:
+        print "Encountered a streaming error. Continuing."
+        continue
 
 
 # miscellaneous:
