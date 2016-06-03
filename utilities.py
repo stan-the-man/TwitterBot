@@ -15,7 +15,7 @@ def get_real(url):
         return res.geturl()
     except:
         print "Error with get_real."
-        return None
+        return " "
 
 def get_now():
     return pytz.utc.localize(datetime.now())

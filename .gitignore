@@ -7,3 +7,5 @@ ExampleDump.json
 .#TwitterBot.py
 *.log
 *.swp
+*.pem
+ec2-user@ec2-52-38-14-157.us-west-2.compute.amazonaws.com
