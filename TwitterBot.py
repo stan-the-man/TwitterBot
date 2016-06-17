@@ -165,6 +165,7 @@ class MyStreamListener(tweepy.StreamListener):
             print("Tweet was deleted.")
             return False
         else:
+            # these are most commonly 136 and 162 errors but they're not documented anywhere
             print("Encountered an error I don't know how to handle. Taking a nap...")
             print status_code
             time.sleep(60*MINUTES_TO_WAIT)
@@ -184,6 +185,16 @@ class TwitterStream():
              'give away like win retweet'
             ]
 
+    # hold terms to use in our random imgur tweets
+    IMGUR_TERMS = [
+            'haha so funny',
+            'guys check this pic out',
+            'this is great omg',
+            'haha this is amazing',
+            'can\'t even believe this pic haha',
+            'what is this even about'
+            ]
+
     def __init__(self):
         myStreamListener = MyStreamListener()
         self.myStream = tweepy.Stream(auth=api.auth, listener=myStreamListener)
@@ -198,12 +209,14 @@ class TwitterStream():
 # different strings work on an either/or basis. if any string matches, the tweet is returned.
 
 # other terms we should look for: giveaway, freebie, free stuff, ????
+# also note there is some hashtags we should look for: #freebiefriday, #winwednesday, etc.
 while True:
     try:
         stream = TwitterStream()
         stream.filter_with(stream.TERMS)
     except:
         print "Encountered a streaming error. Continuing."
+        error_log.error('Encountered a streaming error in while loop.')
         continue
 
 

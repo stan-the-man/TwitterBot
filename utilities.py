@@ -17,18 +17,30 @@ def get_real(url):
         print "Error with get_real."
         return " "
 
+# returns current time for logging purposes
 def get_now():
     return pytz.utc.localize(datetime.now())
 
+# returns a random imgur url to make us look less bot-like
+def get_random_imgur():
+    url = 'http://imgur.com/random'
+    final_url = get_real(url)
+    return final_url
+
+# to check if 'botspotter' is in the name. not a super elegant solution right now.
+# could be expanded to work with the names of other bots we know of.
 def bot_in_name(name):
     return bool(re.search(r'botspotter', name.lower()))
 
+# regex to check if we should retweet a different tweet rather than the one
+# that tweepy's stream gives us (improves our accuracy)
 def search_for_embedded_tweet(text):
     short_url = re.search(r'(t\.co\/)[\w\d]+', text)
     if short_url:
         return short_url.group(0)
     return None
 
+# gives us the status number of the embedded tweet. called after search_for_embedded_tweet()
 def parse_embedded_tweet(text):
     short_url = search_for_embedded_tweet(text)
     if short_url is None:
