@@ -4,13 +4,11 @@
 # [x] handle exceptions given when parsing a tweet that's already been liked/favorited/followed/etc.
 # [] track DM's (most contests contact winners through DM)
 # [x] figure out a way to leave this up and running forever (deal with rate limits?)
-# [] decide if we want to filter by location, language, etc.
-# [] we should come up with a system to stream tweets now and parse later.
 # [x] make our page look less bot-like (not really programming-related).
 # [x] only retweet tweets from the current time period on. the stream occasionally returns stuff from a while back that we don't want to deal with.
 # [x] don't retweet tweets that are just someone else retweeting the contest.
 # [x] deal with this embedded tweet nonsense
-# [] parse @ signs
+# [] parse @ signs (almost done)
 # [x] sleep when over rate limit
 # [x] pass in error rather than code
 # [x] wrap all our error checks in their own module
@@ -23,6 +21,8 @@
 # use a random imgur link and a dict of various "haha so funny" phrases
 # [] log when the stream drops due to Tweepy
 # [] remove commas, ampersands, etc. from keywords follow, like, RT
+# [] add twilio module
+# [] come up with a better solution than bot spotters variable
 
 import tweepy # for all the twitter junk
 import time # for sleeping
