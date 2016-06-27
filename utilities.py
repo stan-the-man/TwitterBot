@@ -56,6 +56,29 @@ def parse_embedded_tweet(text):
         return
     return id.group(1)
 
+# returns a list. empty if nothing to be followed.
+def if_follow_others(text):
+    user_names = re.finditer(r'(\@)[\w\d]+', text)
+    words = ["follow"]
+    list_of_names = []
+    if check_for_words(words, text):
+        for match in user_names:
+            # this is temporary. in the future we need to follow here.
+            # maybe we return a tuple containing the names we need to follow?
+            # print match.group(0)[1:]
+            list_of_names.append(match.group()[1:])
+    return list_of_names
+
+# just doubled up check_for_words. it really should be here anyway.
+def check_for_words(words, text):
+    text = text.lower().replace("/", " ").replace(
+                                              ",", " ").replace("\\", " ")
+    for word in words:
+        if word in text:
+            return True
+    return False
+
+
 def create_logger(name):
     '''logging information. Taken from http://victorlin.me/posts/2012/08/26/good-logging-practice-in-python'''
     log = logging.getLogger(name)

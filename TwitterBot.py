@@ -36,7 +36,7 @@ from utilities import (get_now, bot_in_name,
                        parse_embedded_tweet, create_logger)
 
 # global variable of bot spotters
-spotters = ["BotSpotterBot", "RealBotSpotter", "bufbvr"]
+spotters = ["BotSpotterBot", "RealBotSpotter", "bufbvr", "blkchninstitute", "Annaladygrande"]
 MAX_DAYS_BACK = 3
 SECONDS_TO_WAIT = 11
 MINUTES_TO_WAIT = 15
