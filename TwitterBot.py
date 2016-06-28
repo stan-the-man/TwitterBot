@@ -30,7 +30,8 @@ import pytz # for date-checking
 from urllib2 import HTTPError
 from datetime import timedelta # for date-checking
 from keys import (consumer_key, consumer_secret,
-                  access_token_key, access_token_secret, SELF_SCREEN_NAME)
+                  access_token_key, access_token_secret, SELF_SCREEN_NAME,
+                  account_sid, auth_token, from_number, keegan_number, stan_number)
 from db_handlers import TweetStorage
 from utilities import (get_now, bot_in_name,
                        parse_embedded_tweet, create_logger)
@@ -47,6 +48,12 @@ api = tweepy.API(auth)
 tweet_log = create_logger('Tweets')
 error_log = create_logger('Errors')
 
+# begin twilio stuff. should maybe go inside the class somewhere?
+client = TwilioRestClient(account_sid, auth_token)
+""" message = client.messages.create(body="We just got contacted!",
+                to=keegan_number,
+                from_=from_number) """
+
 # begin class definition
 class MyStreamListener(tweepy.StreamListener):
     def on_status(self, status):
@@ -58,6 +65,24 @@ class MyStreamListener(tweepy.StreamListener):
                 self.follow(tweet_to_retweet)
         except HTTPError as e:
             print e
+
+    # attempt to listen for direct messages. UNTESTED!
+    # note even sure if this is how we access this information
+    def on_direct_message(self, direct_message):
+        tweet_log.info('received dm')
+        message = client.messages.create(body=direct_message,
+                to=keegan_number,
+                from_=stan_number)
+        tweet_log.info(message.sid)
+    
+    # attempt to listen to @ mentions. UNTESTED!
+    # count=1 only returns the most recent @ mention. how do we determine
+    # whether this is unique?
+    def check_mentions(self):
+        mentions = api.mentions_timeline(count=1)
+        for mention in mentions:
+            print mention.text
+            print mention.user.screen_name
 
     # returns a status object (earliest tweet we can find)
     def get_og_tweet(self, status):

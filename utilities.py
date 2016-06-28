@@ -63,9 +63,6 @@ def if_follow_others(text):
     list_of_names = []
     if check_for_words(words, text):
         for match in user_names:
-            # this is temporary. in the future we need to follow here.
-            # maybe we return a tuple containing the names we need to follow?
-            # print match.group(0)[1:]
             list_of_names.append(match.group()[1:])
     return list_of_names
 
