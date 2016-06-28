@@ -49,6 +49,7 @@ tweet_log = create_logger('Tweets')
 error_log = create_logger('Errors')
 
 # begin twilio stuff. should maybe go inside the class somewhere?
+# don't forget to handle exceptions here: https://www.twilio.com/docs/libraries/python
 client = TwilioRestClient(account_sid, auth_token)
 """ message = client.messages.create(body="We just got contacted!",
                 to=keegan_number,
