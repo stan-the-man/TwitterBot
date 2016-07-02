@@ -1,3 +1,12 @@
+# i imagine this being run on a cron tab in another screen.
+# maybe with a frequency of every 8 hours or so.
+# that seems sufficient to both check for new mentions and post a random link
+# TODO:
+# [] test all functions
+# [] perhaps use this to periodically unfollow our oldest people and
+#    delete our oldest tweets
+# [] clean up code
+
 import tweepy # for all the twitter junk
 import time # for sleeping
 import pytz # for date-checking
@@ -36,6 +45,10 @@ if previous_mention != mentions[0].text: # if we got a new mention
                     to=keegan_number,
                     from_=from_number)
     print(message.sid)
+    message2 = clinet.messages.create(body="new @mention: " + mentions[0].text,
+                    to=stan_number,
+                    from_=from_number)
+    print(message.sid)
     # then update the file
     f.truncate() # to erase the file. THIS IS UNTESTED! 
     f.write(mentions[0].text)
@@ -58,7 +71,8 @@ IMGUR_TERMS = [
 msg = random.choice(IMGUR_TERMS) + '\n' + string
 print(msg)
 
-# now let's post the tweet
+# now let's post the tweet. in a loop so it'll run even if we're
+# rate-limited.
 def update(msg):
     try:
         api.update_status(msg)
