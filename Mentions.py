@@ -6,6 +6,7 @@
 # [] perhaps use this to periodically unfollow our oldest people and
 #    delete our oldest tweets
 # [] clean up code
+# [] log appropriately here
 
 import tweepy # for all the twitter junk
 import time # for sleeping
