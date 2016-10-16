@@ -1,7 +1,9 @@
 import pytz
+import random
 import logging
 import re
 from datetime import datetime
+from const import IMGUR_TERMS
 import urllib2
 
 # this code is copied from http://stackoverflow.com/questions/6500721/find-where-a-t-co-link-goes-to
@@ -55,4 +57,8 @@ def create_logger(name):
     log.addHandler(handler)
     return log
 
-
+# returns a random imgur url to make us look less bot-like
+def get_random_imgur():
+    url = 'http://imgur.com/random'
+    final_url = get_real(url)
+    return final_url + ' ' + random.choice(IMGUR_TERMS)

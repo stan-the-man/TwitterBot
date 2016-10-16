@@ -20,7 +20,4 @@ def test_search_for_embedded_tweet():
     assert search_for_embedded_tweet(text) == shortened_link
 
 # run tests here:
-test_bot_in_name()
-test_parse_long_url()
-test_embedded_tweet()
-test_search_for_embedded_tweet()
+print get_random_imgur()

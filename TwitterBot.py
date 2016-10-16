@@ -34,13 +34,10 @@ from keys import (consumer_key, consumer_secret,
 from db_handlers import TweetStorage
 from utilities import (get_now, bot_in_name,
                        parse_embedded_tweet, create_logger)
+from const import spotters, MAX_DAYS_BACK, SECONDS_TO_WAIT, MINUTES_TO_WAIT
 
-# global variable of bot spotters
-spotters = ["BotSpotterBot", "RealBotSpotter", "bufbvr"]
-MAX_DAYS_BACK = 3
-SECONDS_TO_WAIT = 11
-MINUTES_TO_WAIT = 15
 
+# getting access to the twitter api and creating loggers
 auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token_key, access_token_secret)
 api = tweepy.API(auth)
